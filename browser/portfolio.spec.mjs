@@ -24,7 +24,9 @@ test.describe('touch and reduced motion', () => {
   test.use({ viewport: { width: 320, height: 568 }, hasTouch: true, isMobile: true, reducedMotion: 'reduce' });
 
   test('has no horizontal overflow and keeps links usable in both languages', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/');
+    expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(true);
     await expect(page.locator('.art-chart')).toHaveCSS('animation-name', 'none');
     for (const [width, height] of [[320, 568], [393, 851], [740, 360], [768, 1024], [1440, 900]]) {
       await page.setViewportSize({ width, height });
