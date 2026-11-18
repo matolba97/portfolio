@@ -5,7 +5,7 @@
   "engines": { "node": ">=22" },
   "scripts": {
     "build": "node scripts/build.mjs",
-    "lint": "node --check scripts/build.mjs && node --check src/content.mjs && node --check src/illustration.mjs && node --check public/assets/site.js",
+    "lint": "node --check scripts/build.mjs && node --check src/content.mjs",
     "test": "node --test",
     "test:browser": "playwright test",
     "dev": "npm run build && python -m http.server 4173 --bind 127.0.0.1 --directory dist",

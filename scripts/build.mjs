@@ -1,16 +1,16 @@
+import { execFileSync } from 'node:child_process';
 import { cp, mkdir, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { copy, profile, projects } from '../src/content.mjs';
-import { illustration, motif } from '../src/illustration.mjs';
 
 const languages = ['en', 'ar'];
 const icon = '<span class="arrow" aria-hidden="true">→</span>';
 const external = '<span aria-hidden="true">↗</span>';
 const entities = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 const escape = (text) => String(text).replace(/[&<>"']/g, char => entities[char]);
-const route = (lang, slug = '') => (lang === 'ar' ? 'ar/' : '') + (slug ? 'work/' + slug + '/' : '');
-const languageLink = (lang, slug) => lang === 'ar' ? route('en', slug) + '?lang=en' : route('ar', slug);
+const route = (lang, slug = '') => (lang === 'ar' ? 'ar/' : '') + (slug ? 'work/' + slug + '/' : 'projects/');
+const storyPath = (root, lang) => root + '?lang=' + lang;
 const rootPath = (page) => '../'.repeat(page.split('/').filter(Boolean).length) || './';
 const link = (href, title, style = '', marker = '') => `<a class="${style}" href="${escape(href)}">${escape(title)}${marker}</a>`;
 
@@ -23,7 +23,7 @@ function footer(lang, root) {
       ${link(profile.linkedin, 'LinkedIn', 'button ghost', external)}
       ${link(profile.github, 'GitHub', 'button ghost', external)}
     </div>
-    <div class="footer-bottom"><span>${profile[lang]} · ${t.role}</span>${link(root + route(lang), t.home, 'text-link', icon)}</div>
+    <div class="footer-bottom"><span>${profile[lang]} · ${t.role}</span>${link(storyPath(root, lang), t.home, 'text-link', icon)}</div>
   </div></footer>`;
 }
 
@@ -33,38 +33,17 @@ function screenshot(project, lang, root, loading = 'lazy') {
 
 function work(lang, root) {
   const t = copy[lang];
-  return `<section id="work" class="wrap section work"><div class="section-head"><p class="kicker">${t.selected}</p><h2>${t.workTitle}</h2></div>
+  return `<main id="main" tabindex="-1" class="wrap section work"><div class="section-head"><p class="kicker">${t.selected}</p><h1>${t.work}</h1></div>
     ${projects.map(project => {
       const p = project[lang];
       const href = root + route(lang, project.slug);
-      return `<article class="project ${project.color}" data-reveal>
+      return `<article class="project ${project.color}">
         <a class="project-preview" href="${href}" aria-label="${escape(p.title)}">${screenshot(project, lang, root)}</a>
-        <div class="project-copy"><p class="kicker">${p.category}</p><h3><bdi>${p.title}</bdi></h3><p class="question">${p.question}</p>
+        <div class="project-copy"><p class="kicker">${p.category}</p><h2><bdi>${p.title}</bdi></h2><p class="question">${p.question}</p>
         <ul class="tags" aria-label="${t.toolkit}">${project.tools.map(tool => `<li><bdi>${tool}</bdi></li>`).join('')}</ul>
         <div class="links">${link(href, t.caseStudy, 'text-link', icon)}${link(project.demo, t.demo, 'text-link', external)}</div></div>
       </article>`;
-    }).join('')}</section>`;
-}
-
-function home(lang, root) {
-  const t = copy[lang];
-  return `<main id="main" tabindex="-1">
-    <section class="wrap hero">
-      <div class="hero-copy"><p class="kicker hero-role"><span></span>${t.role}</p>
-        <h1>${t.headline[0]} <em>${t.headline[1]}</em></h1><p class="intro">${t.intro}</p>
-        <div class="links">${link('#work', t.browse, 'button primary', icon)}${link('#process', t.process, 'text-link', icon)}</div></div>
-      ${illustration(t.illustration)}
-    </section>
-    <section class="process" id="process"><div class="wrap section">
-      <div class="section-head"><p class="kicker">${t.process}</p><h2>${t.processTitle}</h2></div>
-      <ol class="steps">${t.steps.map(([title, body], i) => `<li data-reveal>${motif(i)}<h3>${title}</h3><p>${body}</p></li>`).join('')}</ol>
-    </div></section>
-    ${work(lang, root)}
-    <section class="about" id="about"><div class="wrap section about-grid">
-      <div><p class="kicker">${t.about}</p><h2>${t.aboutTitle}</h2><p class="about-body">${t.aboutBody}</p><p class="location">${t.location}</p></div>
-      <div class="toolkit"><h3>${t.toolkit}</h3><dl>${t.toolkitGroups.map(([label, tools]) => `<div><dt>${label}</dt><dd dir="ltr">${tools}</dd></div>`).join('')}</dl></div>
-    </div></section>
-  </main>`;
+    }).join('')}</main>`;
 }
 
 function caseStudy(lang, root, project) {
@@ -73,7 +52,7 @@ function caseStudy(lang, root, project) {
   const next = projects[(projects.indexOf(project) + 1) % projects.length];
   const section = (key, href) => `<section><h2>${t[key]}</h2><p>${p[key]}</p>${href ? link(href, key === 'data' ? t.source : t.evidence, 'text-link', external) : ''}</section>`;
   return `<main id="main" tabindex="-1" class="wrap case">
-    <div class="case-lead">${link(root + route(lang) + '#work', t.all, 'text-link back', icon)}
+    <div class="case-lead">${link(root + route(lang), t.all, 'text-link back', icon)}
       <p class="kicker">${p.category}</p><h1><bdi>${p.title}</bdi></h1><p class="intro">${p.question}</p>
       <div class="links">${link(project.demo, t.demo, 'button primary', external)}${link(project.repo, t.repo, 'text-link', external)}</div>
     </div>
@@ -95,42 +74,42 @@ export function render(lang, project, origin) {
   const slug = project?.slug;
   const page = route(lang, slug);
   const root = rootPath(page);
-  const title = project ? project[lang].title + ' | ' + profile[lang] : profile[lang] + ' | ' + t.role;
+  const title = (project ? project[lang].title : t.work) + ' | ' + profile[lang];
   const description = project ? project[lang].question : t.description;
   const alternate = lang === 'en' ? 'ar' : 'en';
   const url = new URL(page, origin).href;
-  const person = JSON.stringify({ '@context': 'https://schema.org', '@type': 'Person', name: profile[lang], jobTitle: t.role, url, sameAs: [profile.github, profile.linkedin] }).replaceAll('<', '\\u003c');
-  const socialImage = new URL('assets/social.png', origin).href;
+  const socialImage = new URL(project ? 'assets/' + project.image + '.png' : 'social-card.png', origin).href;
   return `<!doctype html>
 <html lang="${lang}" dir="${lang === 'ar' ? 'rtl' : 'ltr'}">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>${escape(title)}</title><meta name="description" content="${escape(description)}"><meta name="theme-color" content="#f6f3e9">
+  <title>${escape(title)}</title><meta name="description" content="${escape(description)}"><meta name="theme-color" content="#f6f4ed">
   <link rel="canonical" href="${escape(url)}">
   ${languages.map(locale => `<link rel="alternate" hreflang="${locale}" href="${new URL(route(locale, slug), origin).href}">`).join('')}
   <meta property="og:type" content="${project ? 'article' : 'website'}"><meta property="og:locale" content="${lang === 'ar' ? 'ar_EG' : 'en_US'}">
   <meta property="og:title" content="${escape(title)}"><meta property="og:description" content="${escape(description)}"><meta property="og:url" content="${escape(url)}"><meta property="og:image" content="${socialImage}"><meta name="twitter:card" content="summary_large_image">
-  <link rel="icon" href="${root}assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="${root}assets/site.css">
-  ${project ? '' : `<script type="application/ld+json">${person}</script>`}
-  <script src="${root}assets/site.js" defer></script>
+  <link rel="icon" href="${root}favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="${root}assets/site.css">
 </head>
-<body${project ? '' : ' data-home'}>
+<body>
   ${link('#main', t.skip, 'skip')}
   <header class="mast"><div class="wrap mast-inner">
-    <a class="brand" href="${root + route(lang)}"><img src="${root}assets/favicon.svg" width="39" height="39" alt=""><span>${profile[lang]}</span></a>
-    <nav aria-label="${t.home}"><a href="${root + route(lang)}#work">${t.work}</a><a href="${root + route(lang)}#about">${t.about}</a><a href="#contact">${t.contact}</a></nav>
-    <a class="language" data-language lang="${alternate}" hreflang="${alternate}" aria-label="${alternate === 'ar' ? 'العربية' : 'English'}" href="${root + languageLink(lang, slug)}">${alternate === 'ar' ? 'العربية' : 'EN'}</a>
+    <a class="brand" href="${storyPath(root, lang)}"><span class="monogram" lang="en" aria-hidden="true">mt<span>.</span></span><span>${profile[lang]}</span></a>
+    <nav aria-label="${t.home}"><a href="${storyPath(root, lang)}">${t.home}</a><a href="${root + route(lang)}"${project ? '' : ' aria-current="page"'}>${t.work}</a><a href="#contact">${t.contact}</a></nav>
+    <a class="language" lang="${alternate}" hreflang="${alternate}" aria-label="${alternate === 'ar' ? 'العربية' : 'English'}" href="${root + route(alternate, slug)}">${alternate === 'ar' ? 'العربية' : 'EN'}</a>
   </div></header>
-  ${project ? caseStudy(lang, root, project) : home(lang, root)}
+  ${project ? caseStudy(lang, root, project) : work(lang, root)}
   ${footer(lang, root)}
 </body>
 </html>`;
 }
 
-export async function build(output = 'dist', origin = 'https://matolba97.github.io/portfolio/') {
+const defaultOrigin = 'https://matolba97.github.io/portfolio/';
+
+export async function build(output = 'dist', origin = defaultOrigin) {
   if (!origin.endsWith('/')) origin += '/';
   await mkdir(output, { recursive: true });
   await cp('public', output, { recursive: true });
+  await cp('story/public/favicon.svg', join(output, 'favicon.svg'));
   const urls = [];
   for (const lang of languages) {
     for (const project of [undefined, ...projects]) {
@@ -141,14 +120,31 @@ export async function build(output = 'dist', origin = 'https://matolba97.github.
       urls.push(new URL(page, origin).href);
     }
   }
-  await writeFile(join(output, 'sitemap.xml'), '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + urls.map(url => '<url><loc>' + escape(url) + '</loc></url>').join('') + '</urlset>\n');
+  await writeFile(join(output, 'ar', 'index.html'), '<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=../?lang=ar"><title>قصة محلل البيانات</title></head><body><a href="../?lang=ar">قصة محلل البيانات</a></body></html>');
+  const sitemap = [origin, ...urls];
+  await writeFile(join(output, 'sitemap.xml'), '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + sitemap.map(url => '<url><loc>' + escape(url) + '</loc></url>').join('') + '</urlset>\n');
   await writeFile(join(output, 'robots.txt'), 'User-agent: *\nAllow: /\nSitemap: ' + new URL('sitemap.xml', origin).href + '\n');
   await writeFile(join(output, '.nojekyll'), '');
   return urls;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const urls = await build('dist', process.env.PORTFOLIO_ORIGIN || undefined);
-  console.log('Generated ' + urls.length + ' localized pages.');
+  const output = resolve('dist');
+  const origin = new URL(process.env.PORTFOLIO_ORIGIN || defaultOrigin);
+  if (!origin.pathname.endsWith('/')) origin.pathname += '/';
+  execFileSync(process.execPath, ['node_modules/vite/bin/vite.js', 'build', '--outDir', output], {
+    cwd: 'story',
+    stdio: 'inherit',
+    env: { ...process.env, VITE_PORTFOLIO_ORIGIN: origin.href },
+  });
+  const urls = await build(output, origin.href);
+  const fonts = {
+    'manrope.woff2': '@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2',
+    'noto-arabic.woff2': '@fontsource-variable/noto-sans-arabic/files/noto-sans-arabic-arabic-wght-normal.woff2',
+  };
+  for (const [name, source] of Object.entries(fonts)) {
+    await cp(join('story', 'node_modules', source), join(output, 'assets', name));
+  }
+  console.log('Built the five-scene story and ' + urls.length + ' localized project pages.');
 }
 

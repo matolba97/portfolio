@@ -22,14 +22,14 @@ test('gives each project a unique report and equivalent translated content', () 
 test('renders language links, focusable navigation, and locale metadata', () => {
   const ar = render('ar', projects[1], origin);
   assert.match(ar, /<html lang="ar" dir="rtl">/);
-  assert.match(ar, /href="\.\.\/\.\.\/\.\.\/work\/hospital-operations\/\?lang=en"/);
+  assert.match(ar, /href="\.\.\/\.\.\/\.\.\/work\/hospital-operations\/"/);
   assert.match(ar, /hreflang="en" href="https:\/\/example.test\/alternate-base\/work\/hospital-operations\/"/);
   assert.match(ar, /href="#main"/);
   assert.match(ar, /<main id="main"/);
   assert.match(ar, /يدرس|دراسة|الزيارة|الزيارات/);
   const en = render('en', undefined, origin);
   assert.match(en, /<html lang="en" dir="ltr">/);
-  assert.match(en, /href="\.\/ar\/">العربية/);
+  assert.match(en, /href="\.\.\/ar\/projects\/">العربية/);
 });
 
 test('emits eight real pages where every local link, fragment and asset resolves', async () => {
@@ -43,6 +43,11 @@ test('emits eight real pages where every local link, fragment and asset resolves
         const target = new URL(href, url);
         if (target.origin !== new URL(origin).origin) continue;
         assert.ok(target.pathname.startsWith('/alternate-base/'));
+        if (target.pathname === new URL(origin).pathname) {
+          // Vite emits the story homepage separately from the project pages.
+          assert.match(target.search, /^\?lang=(en|ar)$/);
+          continue;
+        }
         const path = resolve(dir, target.pathname.slice('/alternate-base/'.length));
         const info = await stat(path);
         if (info.isDirectory()) {
@@ -52,7 +57,7 @@ test('emits eight real pages where every local link, fragment and asset resolves
       }
     }
     assert.ok((await readFile(join(dir, 'sitemap.xml'), 'utf8')).includes(urls.at(-1)));
-    assert.ok((await stat(join(dir, 'assets', 'social.png'))).size > 0);
+    assert.ok((await stat(join(dir, 'assets', 'hr.png'))).size > 0);
   } finally {
     // The temporary test directory contains only generated files.
     const { readdir, rmdir, unlink } = await import('node:fs/promises');
