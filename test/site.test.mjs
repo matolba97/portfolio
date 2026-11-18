@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
 import { projects } from '../src/content.mjs';
+import { credentials } from '../src/credentials.mjs';
 import { build, render } from '../scripts/build.mjs';
 
 const origin = 'https://example.test/alternate-base/';
@@ -43,7 +44,7 @@ test('renders independent About pages with all career details and a separate Con
     const positions = ['Data Analyst', 'Call Center MIS', 'Account Manager'].map(title =>
       html.indexOf(title, html.indexOf('class="career-timeline"')));
     assert.ok(positions.every((position, index) => position >= 0 && (!index || position > positions[index - 1])));
-    for (const value of ['Contact Insurance Brokerage', 'Contact Financial Holding', 'Altibbi', '2023–2025', '2021–2022', 'Python', 'SQL', 'PostgreSQL', 'Power BI', 'DAX', 'Excel', 'IBM Data Analyst Professional Certificate', 'DataCamp Data Analyst Associate', 'DataCamp SQL Associate']) {
+    for (const value of ['Contact Insurance Brokerage', 'Contact Financial Holding', 'Altibbi', '2023–2025', '2021–2022', 'Python', 'SQL', 'PostgreSQL', 'Power BI', 'DAX', 'Excel']) {
       assert.ok(html.includes(value), value);
     }
     assert.match(html, /href="(?:\.\.\/)+(?:ar\/)?projects\/#contact"/);
@@ -51,6 +52,36 @@ test('renders independent About pages with all career details and a separate Con
   }
   assert.match(en, /June 2025–Present/);
   assert.match(ar, /يونيو 2025–الآن/);
+});
+
+test('renders six featured credentials and an initially closed archive of 25 unique entries in both locales', () => {
+  const featuredIds = [
+    'data-analyst-associate', 'sql-associate', 'ibm-data-analyst',
+    'power-bi-365', 'sql-intermediate-hackerrank', 'foundations-of-generative-ai',
+  ];
+  const chronological = credentials.toSorted((a, b) => b.issuedAt.localeCompare(a.issuedAt));
+  assert.equal(credentials.length, 25);
+  assert.equal(new Set(credentials.map(item => item.id)).size, 25);
+  for (const lang of ['en', 'ar']) {
+    const html = render(lang, undefined, origin, true);
+    const featured = html.split('<ul class="featured-credentials"')[1].split('</ul>')[0];
+    const archive = html.split('<details class="credential-archive">')[1].split('</details>')[0];
+    const rows = [...archive.matchAll(/data-credential="([^"]+)"[^>]*>([\s\S]*?)<\/li>/g)];
+    assert.deepEqual([...featured.matchAll(/data-credential="([^"]+)"/g)].map(([, id]) => id), featuredIds);
+    assert.deepEqual(rows.map(([, id]) => id), chronological.map(item => item.id));
+    assert.deepEqual([...archive.matchAll(/<h3 id="credential-year-(\d{4})"/g)].map(([, year]) => year), ['2026', '2025', '2024']);
+    assert.ok(archive.includes(lang === 'ar' ? 'عرض جميع الشهادات (25)' : 'View All 25 Certifications'));
+    rows.forEach(([, , row], index) => {
+      const item = chronological[index];
+      assert.ok(row.includes(`datetime="${item.issuedAt}"`), item.id);
+      if (item.credentialId) assert.ok(row.includes(`<bdi dir="ltr">${item.credentialId}</bdi>`), item.id);
+      if (item.verificationUrl) {
+        assert.ok(row.includes(`href="${item.verificationUrl}" target="_blank" rel="noopener noreferrer"`), item.id);
+      } else {
+        assert.doesNotMatch(row, /class="credential-actions"/, item.id);
+      }
+    });
+  }
 });
 
 test('renders compact project previews and exposes the takeaway and original screenshot on each case study', async () => {

@@ -4,7 +4,8 @@ import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { copy, profile, projects } from '../src/content.mjs';
-import { careerCopy, credentials, roles, tools } from '../src/career.mjs';
+import { careerCopy, roles, tools } from '../src/career.mjs';
+import { certifications } from '../src/certifications.mjs';
 import { PortfolioHeader } from '../story/src/portfolio-header.mjs';
 
 const requireStory = createRequire(new URL('../story/package.json', import.meta.url));
@@ -62,7 +63,7 @@ function work(lang, root) {
     }).join('')}</main>`;
 }
 
-function about(lang) {
+function about(lang, root) {
   const t = careerCopy[lang];
   return `<main id="main" tabindex="-1" class="wrap section career">
     <header class="career-lead"><h1>${t.heading}</h1><p class="intro">${t.intro}</p></header>
@@ -76,10 +77,10 @@ function about(lang) {
         </li>`).join('')}
       </ol>
     </section>
-    <div class="career-details">
-      <section><h2>${t.toolkit}</h2><ul class="tags">${tools.map(tool => `<li><bdi lang="en">${tool}</bdi></li>`).join('')}</ul></section>
-      <section><h2>${t.credentials}</h2><ul class="career-credentials">${credentials.map(credential => `<li><bdi lang="en">${credential.title}</bdi><time datetime="${credential.year}">${credential.year}</time></li>`).join('')}</ul></section>
-    </div>
+    <section class="career-details" aria-labelledby="career-tools">
+      <h2 id="career-tools">${t.toolkit}</h2><ul class="tags">${tools.map(tool => `<li><bdi lang="en">${tool}</bdi></li>`).join('')}</ul>
+    </section>
+    ${certifications(lang, root, escape)}
   </main>`;
 }
 
@@ -143,7 +144,7 @@ export function render(lang, project, origin, isAbout = false) {
 <body>
   ${link('#main', t.skip, 'skip')}
   ${header}
-  ${isAbout ? about(lang) : project ? caseStudy(lang, root, project) : work(lang, root)}
+  ${isAbout ? about(lang, root) : project ? caseStudy(lang, root, project) : work(lang, root)}
   ${isAbout ? '' : footer(lang, root)}
 </body>
 </html>`;

@@ -3,6 +3,60 @@ import { expect, test } from '@playwright/test';
 const progress = (page) => page.locator('[data-active-chapter]');
 const expectChapter = (page, chapter) => expect(progress(page)).toHaveAttribute('data-active-chapter', String(chapter));
 
+test('opens the complete certification archive by keyboard in English and Arabic', async ({ page }, testInfo) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/about/');
+  const section = page.locator('.certifications');
+  const archive = section.locator('details');
+  const summary = archive.locator('summary');
+  const viewports = [[320, 420], [375, 667], [393, 851], [768, 1024], [1440, 900]];
+  async function checkViewports() {
+    for (const [width, height] of viewports) {
+      await page.setViewportSize({ width, height });
+      expect(await page.locator('html').evaluate(element => element.scrollWidth)).toBeLessThanOrEqual(width);
+      expect((await summary.boundingBox()).height).toBeGreaterThanOrEqual(44);
+    }
+  }
+  await expect(section.getByRole('heading', { name: 'Certifications & Continuous Learning' })).toBeVisible();
+  await expect(section.locator('.featured-credentials > li')).toHaveCount(6);
+  await expect(archive.locator('li').first()).toBeHidden();
+  await expect(summary).toHaveText('View All 25 Certifications', { useInnerText: true });
+  await section.screenshot({
+    path: testInfo.outputPath('certifications-desktop-en.png'),
+    style: '.story-header { position: static }',
+  });
+  await summary.focus();
+  await expect(summary).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(archive.locator('li').first()).toBeVisible();
+  await expect(archive.locator('li')).toHaveCount(25);
+  await expect(summary).toHaveText('Show Less', { useInnerText: true });
+  await checkViewports();
+  const badge = section.getByRole('img', { name: 'Official DataCamp Data Analyst Associate badge' });
+  await badge.scrollIntoViewIfNeeded();
+  await expect.poll(() => badge.evaluate(image => image.naturalWidth)).toBe(196);
+  await expect(section.getByRole('link', { name: 'View Credential Data Analyst Associate', exact: true }).first()).toHaveAttribute('target', '_blank');
+  await summary.press('Space');
+  await expect(archive.locator('li').last()).toBeHidden();
+
+  await page.getByRole('link', { name: 'Switch to Arabic' }).click();
+  await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+  await expect(section.getByRole('heading', { name: 'الشهادات والتعلّم المستمر' })).toBeVisible();
+  await expect(summary).toHaveText('عرض جميع الشهادات (25)', { useInnerText: true });
+  await summary.click();
+  await expect(archive.getByText('Basic Data Descriptors, Statistical Distributions, and Application to Business Decisions')).toBeVisible();
+  await checkViewports();
+  await page.setViewportSize({ width: 393, height: 851 });
+  await summary.evaluate(element => element.scrollIntoView({ block: 'start' }));
+  await page.screenshot({ path: testInfo.outputPath('certifications-archive-mobile-ar.png') });
+  await summary.click();
+  await section.screenshot({
+    path: testInfo.outputPath('certifications-featured-mobile-ar.png'),
+    style: '.story-header { position: static }',
+  });
+});
+
 test('uses desktop wheel, fine scroll deltas, and native keyboard scrolling', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto('/?lang=en');
