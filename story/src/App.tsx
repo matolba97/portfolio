@@ -94,7 +94,7 @@ const StorySection = memo(function StorySection({
                 >
                   <span className="responsibility-number" aria-hidden="true">0{i + 1}</span>
                   <div>
-                    <h2><bdi lang="en">{group.title}</bdi></h2>
+                    <h3>{group.title}</h3>
                     <p>{group.copy}</p>
                   </div>
                 </motion.li>
@@ -223,9 +223,10 @@ function Presentation() {
 
   return (
     <div className="presentation" data-reduced-motion={reduced} lang={language} dir={direction}>
+      <a className="skip" href="#main">{text.skip}</a>
       <PortfolioHeader
         language={language}
-        links={{ story: "#story", projects: projectsHref, about: aboutHref, contact: "#contact" }}
+        links={{ story: "#story", projects: projectsHref, about: aboutHref, contact: `${projectsHref}#contact` }}
         active={activeLink}
         onLanguageChange={(locale) => {
           if (locale === language) return;
@@ -236,7 +237,7 @@ function Presentation() {
         }}
         headerRef={header}
       />
-      <main className="story-stage" ref={stage} aria-label={text.presentation}>
+      <main id="main" className="story-stage" ref={stage} tabIndex={-1} aria-label={text.presentation}>
         {story.map((entry, index) => (
           <StorySection key={entry.id} entry={entry} index={index} language={language} reduced={reduced} />
         ))}

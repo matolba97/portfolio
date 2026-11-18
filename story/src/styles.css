@@ -1,12 +1,6 @@
 :root {
-  --paper: #f6f4ed;
-  --card: #fffdf7;
-  --ink: #292d2b;
+  --card: var(--white);
   --muted: #666f68;
-  --accent: #247367;
-  --soft-accent: #dce9df;
-  --wash: #ebece2;
-  --line: #d4d8ce;
   font-family: "Noto Sans Arabic Variable", sans-serif;
   color: var(--ink);
   background: var(--paper);
@@ -47,7 +41,9 @@ a:focus-visible {
   background-image: var(--paper-texture);
 }
 html.story-scroll {
+  overflow-anchor: none;
   scroll-padding-block-start: var(--story-header-height, 0px);
+  scroll-padding-block-end: var(--story-progress-height, 0px);
   scroll-snap-type: y proximity;
   scroll-behavior: smooth;
 }
@@ -62,7 +58,7 @@ html.story-scroll {
   padding-block-end: var(--story-progress-height, 0px);
   scroll-snap-align: start;
 }
-.story-section:focus-visible {
+:is(.story-stage, .story-section):focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: -2px;
 }
@@ -622,7 +618,7 @@ html.story-scroll {
   color: var(--accent);
   padding-top: 4px;
 }
-.responsibility-list h2 {
+.responsibility-list h3 {
   font:
     650 13px "Manrope Variable",
     sans-serif;
@@ -675,7 +671,7 @@ html.story-scroll {
     margin-top: 12px;
     gap: 10px;
   }
-  .responsibility-list h2 {
+  .responsibility-list h3 {
     font-size: 12px;
     margin-bottom: 3px;
   }
@@ -760,7 +756,7 @@ html.story-scroll {
     gap: 5px;
     margin-top: 7px;
   }
-  .responsibility-list h2 {
+  .responsibility-list h3 {
     font-size: 11px;
     margin-bottom: 1px;
   }
@@ -862,7 +858,7 @@ html.story-scroll {
     gap: 4px;
     margin-top: 3px;
   }
-  .slide-responsibilities .responsibility-list h2 {
+  .slide-responsibilities .responsibility-list h3 {
     margin-bottom: 1px;
   }
   .slide-responsibilities .responsibility-list p {
@@ -901,6 +897,24 @@ html.story-scroll {
   color: var(--muted);
   font-family: "Manrope Variable", "Noto Sans Arabic Variable", sans-serif;
   font-size: 11px;
+}
+/* Narrow and short screens can scroll through taller scenes at a readable size. */
+@media (max-width: 700px), (max-height: 480px) {
+  .presentation :is(.chapter, .chapter-index, .scene-note, .eyebrow),
+  .presentation :is(.progress-chapter, .page-number > span, .responsibility-number) {
+    font-size: .75rem;
+    line-height: 1.5;
+  }
+  .presentation :is(.supporting-copy, .responsibility-list p) {
+    font-size: .9375rem;
+    line-height: 1.65;
+  }
+  .presentation :is(.professional-title, .responsibility-list h3, .linkedin-cta) {
+    font-size: .875rem;
+  }
+  .presentation .progress {
+    padding-block: .25rem;
+  }
 }
 @media (max-width: 700px) {
   .story-progress-inner {

@@ -46,11 +46,33 @@ test('renders independent About pages with all career details and a separate Con
     for (const value of ['Contact Insurance Brokerage', 'Contact Financial Holding', 'Altibbi', '2023–2025', '2021–2022', 'Python', 'SQL', 'PostgreSQL', 'Power BI', 'DAX', 'Excel', 'IBM Data Analyst Professional Certificate', 'DataCamp Data Analyst Associate', 'DataCamp SQL Associate']) {
       assert.ok(html.includes(value), value);
     }
-    assert.match(html, /href="[^"]+\?lang=(en|ar)#contact"/);
+    assert.match(html, /href="(?:\.\.\/)+(?:ar\/)?projects\/#contact"/);
     assert.doesNotMatch(html, /id="contact"/);
   }
   assert.match(en, /June 2025–Present/);
   assert.match(ar, /يونيو 2025–الآن/);
+});
+
+test('renders compact project previews and exposes the takeaway and original screenshot on each case study', async () => {
+  for (const lang of ['en', 'ar']) {
+    const gallery = render(lang, undefined, origin);
+    const previews = [...gallery.matchAll(/src="([^"]+-preview\.png)" width="(\d+)" height="(\d+)"/g)];
+    assert.equal(previews.length, projects.length);
+    for (const [index, project] of projects.entries()) {
+      const html = render(lang, project, origin);
+      assert.ok(html.indexOf('class="case-takeaway"') < html.indexOf('class="case-figure"'));
+      assert.ok(html.includes(`<bdi>${project.stat}</bdi>`));
+      assert.match(html, /href="(?:\.\.\/)+(?:ar\/)?projects\/#contact"/);
+      assert.ok(html.includes(`href="${lang === 'ar' ? '../../../' : '../../'}assets/${project.image}.png"`));
+      assert.ok(html.includes(project[lang].image));
+      const [, , width, height] = previews[index];
+      const preview = await readFile(`public/assets/${project.image}-preview.png`);
+      const original = await stat(`public/assets/${project.image}.png`);
+      assert.equal(preview.readUInt32BE(16), Number(width));
+      assert.equal(preview.readUInt32BE(20), Number(height));
+      assert.ok(preview.length < original.size / 2);
+    }
+  }
 });
 
 test('emits ten real pages where every local link, fragment and asset resolves', async () => {

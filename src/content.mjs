@@ -99,6 +99,7 @@ export const projects = [
 
 export const copy = {
   en: {
+    fullImage: 'Open full-size screenshot',
     role: 'Data Analyst', location: 'Cairo, Egypt', home: 'Home', work: 'Work', about: 'About', contact: 'Contact', skip: 'Skip to content', language: 'Language',
     navigation: 'Portfolio navigation', storyLink: 'Story', projectsLink: 'Projects',
     headline: ['Good decisions', 'start with a question.'], intro: 'I’m Mohamed Tolba, a data analyst in insurance brokerage. I build reports that help teams make sense of messy records and decide where to look next.',
@@ -108,11 +109,12 @@ export const copy = {
     aboutTitle: 'I’m Mohamed Tolba.', aboutBody: 'I work in insurance reporting and business dashboards at Contact Insurance Brokerage in Cairo. My approach starts with definitions people can agree on and ends with a report they can use to explore the answer.',
     toolkit: 'Toolkit', toolkitGroups: [['Business intelligence', 'Power BI · DAX · Excel'], ['Data preparation', 'Power Query · Python · pandas'], ['Analysis & validation', 'SQL · PostgreSQL · DuckDB']],
     contactTitle: 'Let’s talk about data.', contactBody: 'For analytics roles, project conversations, or questions about the work above.',
-    email: 'Email', capture: 'Power BI report capture', context: 'Business context', data: 'Dataset', method: 'How I approached it', finding: 'What the analysis showed', implication: 'What to investigate next', limit: 'Scope and limitations', source: 'Data source', evidence: 'Supporting analysis', next: 'Next case study',
+    email: 'Email', context: 'Business context', data: 'Dataset', method: 'How I approached it', finding: 'What the analysis showed', implication: 'What to investigate next', limit: 'Scope and limitations', source: 'Data source', evidence: 'Supporting analysis', next: 'Next case study',
     description: 'Mohamed Tolba, data analyst in Cairo. Explore Power BI case studies in workforce analytics, hospital operations, and e-commerce.',
     illustration: 'An analyst traces scattered records into a chart and marks the result for review.',
   },
   ar: {
+    fullImage: 'افتح الصورة بالحجم الكامل',
     role: 'محلل بيانات', location: 'القاهرة، مصر', home: 'الرئيسية', work: 'المشاريع', about: 'نبذة عني', contact: 'تواصل', skip: 'انتقل إلى المحتوى', language: 'اللغة',
     navigation: 'التنقل في الموقع', storyLink: 'القصة', projectsLink: 'المشاريع',
     headline: ['القرار الواضح', 'بيبدأ بسؤال.'], intro: 'أنا محمد طلبة، محلل بيانات في مجال وساطة التأمين. ببني تقارير تساعد الفرق تفهم السجلات المتفرقة وتحدد الخطوة الجاية في التحليل.',
@@ -122,7 +124,7 @@ export const copy = {
     aboutTitle: 'أنا محمد طلبة.', aboutBody: 'أعمل في تقارير التأمين ولوحات متابعة الأداء في شركة Contact Insurance Brokerage بالقاهرة. أبدأ بتعريفات يتفق عليها الفريق، ثم أبني تقريرًا يقدر الفريق يستكشف الإجابة من خلاله.',
     toolkit: 'أدوات العمل', toolkitGroups: [['ذكاء الأعمال', 'Power BI · DAX · Excel'], ['إعداد البيانات', 'Power Query · Python · pandas'], ['التحليل والتحقق', 'SQL · PostgreSQL · DuckDB']],
     contactTitle: 'خلّينا نتكلم عن البيانات.', contactBody: 'لفرص العمل في التحليل، أو مناقشة مشروع، أو الاستفسار عن الأعمال المعروضة.',
-    email: 'البريد الإلكتروني', capture: 'لقطة من تقرير Power BI', context: 'سياق العمل', data: 'البيانات', method: 'منهجية التحليل', finding: 'ما أظهره التحليل', implication: 'ما يستحق دراسة إضافية', limit: 'نطاق التحليل وحدوده', source: 'مصدر البيانات', evidence: 'تفاصيل التحليل', next: 'دراسة الحالة التالية',
+    email: 'البريد الإلكتروني', context: 'سياق العمل', data: 'البيانات', method: 'منهجية التحليل', finding: 'ما أظهره التحليل', implication: 'ما يستحق دراسة إضافية', limit: 'نطاق التحليل وحدوده', source: 'مصدر البيانات', evidence: 'تفاصيل التحليل', next: 'دراسة الحالة التالية',
     description: 'محمد طلبة، محلل بيانات في القاهرة. دراسات حالة باستخدام Power BI في الموارد البشرية وعمليات المستشفيات والتجارة الإلكترونية.',
     illustration: 'محلل يتتبّع سجلات متفرقة ويحوّلها إلى مخطط يراجع نتيجته.',
   },

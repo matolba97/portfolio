@@ -21,6 +21,7 @@ export function saveLanguage(
   }
 }
 const english = {
+  skip: "Skip to content",
   brand: "THE DATA ANALYST STORY",
   edition: "A story from insurance brokerage",
   projects: "Projects",
@@ -73,6 +74,7 @@ const english = {
 export const translations: Record<Language, typeof english> = {
   en: english,
   ar: {
+    skip: "انتقل إلى المحتوى",
     brand: "قصة محلل البيانات",
     edition: "قصة من عالم التأمين",
     projects: "المشاريع",

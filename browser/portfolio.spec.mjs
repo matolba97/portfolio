@@ -56,13 +56,12 @@ test('keeps localized links, direct URLs, and back and forward navigation', asyn
   await expect(nav.getByRole('link', { name: 'About' })).toHaveAttribute('aria-current', 'page');
 
   await nav.getByRole('link', { name: 'Contact' }).click();
-  await expect(page).toHaveURL(/#contact$/);
-  await expect(page.locator('#contact')).toHaveAttribute('href', /linkedin\.com\/in\//);
-  await expect(nav.getByRole('link', { name: 'Contact' })).toHaveAttribute('aria-current', 'location');
+  await expect(page).toHaveURL(/\/projects\/#contact$/);
+  await expect(page.locator('#contact').getByRole('link', { name: 'Email' })).toHaveAttribute('href', /^mailto:/);
   await page.goBack();
   await expect(page).toHaveURL(/\/about\/$/);
   await page.goForward();
-  await expect(page).toHaveURL(/#contact$/);
+  await expect(page).toHaveURL(/\/projects\/#contact$/);
   await nav.getByRole('link', { name: 'Story' }).click();
   await expectChapter(page, 1);
 
@@ -83,6 +82,36 @@ test('keeps localized links, direct URLs, and back and forward navigation', asyn
   await expect(page).toHaveURL(/\/projects\/$/);
   await page.goto('/?lang=ar#about');
   await expect(page).toHaveURL(/\/ar\/about\/$/);
+  await nav.locator('a[href$="#contact"]').click();
+  await expect(page).toHaveURL(/\/ar\/projects\/#contact$/);
+});
+
+test('keeps the Story readable and keyboard-accessible and shows case-study evidence early on a phone', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/?lang=ar');
+  await page.keyboard.press('Tab');
+  await expect(page.locator('.skip')).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('main')).toBeFocused();
+  await expect(page.locator('#story .supporting-copy')).toHaveCSS('font-size', '15px');
+  await expect(page.locator('#story .scene-note')).toHaveCSS('font-size', '12px');
+  for (const target of await page.locator('.story-links a, .language-control button').all()) {
+    const bounds = await target.boundingBox();
+    expect(bounds.width).toBeGreaterThanOrEqual(44);
+    expect(bounds.height).toBeGreaterThanOrEqual(44);
+  }
+  expect(await page.locator('html').evaluate(element => element.scrollWidth)).toBeLessThanOrEqual(320);
+  await page.screenshot({ path: testInfo.outputPath('story-readable-ar.png') });
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/work/workforce-intelligence/');
+  await expect(page.locator('.case-takeaway')).toContainText('+123');
+  expect((await page.locator('.case-takeaway').boundingBox()).y).toBeLessThan((await page.locator('.case-figure').boundingBox()).y);
+  await expect(page.locator('.case-figure figcaption')).toContainText('headcount');
+  await page.screenshot({ path: testInfo.outputPath('case-readable-en.png') });
+  await page.getByRole('link', { name: 'Open full-size screenshot' }).click();
+  await expect(page).toHaveURL(/\/assets\/hr\.png$/);
 });
 
 test.describe('touch and short viewports', () => {

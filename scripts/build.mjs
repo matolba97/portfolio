@@ -21,6 +21,11 @@ const aboutRoute = (lang) => (lang === 'ar' ? 'ar/' : '') + 'about/';
 const storyPath = (root, lang) => root + '?lang=' + lang;
 const rootPath = (page) => '../'.repeat(page.split('/').filter(Boolean).length) || './';
 const link = (href, title, style = '', marker = '') => `<a class="${style}" href="${escape(href)}">${escape(title)}${marker}</a>`;
+const imageSizes = {
+  hr: { original: [1920, 984], preview: [760, 390] },
+  hospital: { original: [2602, 1334], preview: [760, 390] },
+  commerce: { original: [3034, 1624], preview: [760, 407] },
+};
 
 function footer(lang, root) {
   const t = copy[lang];
@@ -35,8 +40,11 @@ function footer(lang, root) {
   </div></footer>`;
 }
 
-function screenshot(project, lang, root, loading = 'lazy') {
-  return `<img class="report-image" src="${root}assets/${project.image}.png" alt="${escape(project[lang].image)}" loading="${loading}" decoding="async">`;
+function screenshot(project, root, variant, alt) {
+  const [width, height] = imageSizes[project.image][variant];
+  const preview = variant === 'preview';
+  const filename = `${project.image}${preview ? '-preview' : ''}.png`;
+  return `<img class="report-image" src="${root}assets/${filename}" width="${width}" height="${height}" alt="${escape(alt)}" loading="${preview ? 'lazy' : 'eager'}" decoding="async">`;
 }
 
 function work(lang, root) {
@@ -49,7 +57,7 @@ function work(lang, root) {
         <div class="project-copy"><h2><bdi>${p.title}</bdi></h2><p class="project-category">${p.category}</p><p class="question">${p.question}</p>
         <ul class="tags" aria-label="${t.toolkit}">${project.tools.map(tool => `<li><bdi lang="en">${tool}</bdi></li>`).join('')}</ul>
         <div class="links">${link(href, t.caseStudy, 'text-link', icon)}${link(project.demo, t.demo, 'text-link', external)}</div></div>
-        <a class="project-preview" href="${href}" aria-label="${escape(p.title)}">${screenshot(project, lang, root)}</a>
+        <a class="project-preview" href="${href}" aria-label="${escape(p.title)}">${screenshot(project, root, 'preview', p.image)}</a>
       </article>`;
     }).join('')}</main>`;
 }
@@ -83,13 +91,16 @@ function caseStudy(lang, root, project) {
   return `<main id="main" tabindex="-1" class="wrap case">
     <div class="case-lead">${link(root + route(lang), t.all, 'text-link back', icon)}
       <h1><bdi>${p.title}</bdi></h1><p class="project-category">${p.category}</p><p class="intro">${p.question}</p>
+      <p class="case-takeaway"><strong><bdi>${project.stat}</bdi></strong> ${p.stat}</p>
       <div class="links">${link(project.demo, t.demo, 'button primary', external)}${link(project.repo, t.repo, 'text-link', external)}</div>
     </div>
-    <figure class="case-figure">${screenshot(project, lang, root, 'eager')}<figcaption>${t.capture}</figcaption></figure>
+    <figure class="case-figure">${screenshot(project, root, 'original', '')}<figcaption>
+      <span>${escape(p.image)}</span>${link(`${root}assets/${project.image}.png`, t.fullImage, 'text-link')}
+    </figcaption></figure>
     <div class="case-grid">
       <div class="case-body">
         ${section('context')}${section('data', project.source)}${section('method')}
-        <section class="finding"><h2>${t.finding}</h2><div class="stat"><bdi>${project.stat}</bdi></div><p class="finding-label">${p.stat}</p><p>${p.finding}</p>${link(project.evidence, t.evidence, 'text-link', external)}</section>
+        <section class="finding"><h2>${t.finding}</h2><p>${p.finding}</p>${link(project.evidence, t.evidence, 'text-link', external)}</section>
         ${section('implication')}${section('limit')}
       </div>
       <aside class="case-aside"><h2>${t.toolkit}</h2><ul class="tags">${project.tools.map(tool => `<li><bdi>${tool}</bdi></li>`).join('')}</ul></aside>
@@ -105,7 +116,6 @@ export function render(lang, project, origin, isAbout = false) {
   const root = rootPath(page);
   const title = (isAbout ? t.about : project ? project[lang].title : t.projectsLink) + ' | ' + profile[lang];
   const description = isAbout ? careerCopy[lang].intro : project ? project[lang].question : t.description;
-  const alternate = lang === 'en' ? 'ar' : 'en';
   const url = new URL(page, origin).href;
   const socialImage = new URL(project ? 'assets/' + project.image + '.png' : 'social-card.png', origin).href;
   const header = renderToStaticMarkup(createElement(PortfolioHeader, {
@@ -114,7 +124,7 @@ export function render(lang, project, origin, isAbout = false) {
       story: storyPath(root, lang) + '#story',
       projects: root + route(lang),
       about: root + aboutRoute(lang),
-      contact: isAbout ? storyPath(root, lang) + '#contact' : '#contact',
+      contact: isAbout || project ? root + route(lang) + '#contact' : '#contact',
     },
     active: isAbout ? 'about' : 'projects',
     languageLinks: Object.fromEntries(languages.map(locale => [locale, root + (isAbout ? aboutRoute(locale) : route(locale, slug))])),
