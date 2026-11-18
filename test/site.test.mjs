@@ -29,14 +29,35 @@ test('renders language links, focusable navigation, and locale metadata', () => 
   assert.match(ar, /يدرس|دراسة|الزيارة|الزيارات/);
   const en = render('en', undefined, origin);
   assert.match(en, /<html lang="en" dir="ltr">/);
-  assert.match(en, /href="\.\.\/ar\/projects\/">العربية/);
+  assert.match(en, /href="\.\.\/ar\/projects\/" hreflang="ar">AR/i);
+  assert.match(en, /href="\.\.\/\?lang=en#story">Story/);
+  assert.match(en, /href="\.\.\/about\/">About/);
+  assert.match(en, /href="#contact">Contact/);
+  assert.match(en, /aria-current="location">Projects/);
 });
 
-test('emits eight real pages where every local link, fragment and asset resolves', async () => {
+test('renders independent About pages with all career details and a separate Contact destination', () => {
+  const en = render('en', undefined, origin, true);
+  const ar = render('ar', undefined, origin, true);
+  for (const html of [en, ar]) {
+    const positions = ['Data Analyst', 'Call Center MIS', 'Account Manager'].map(title =>
+      html.indexOf(title, html.indexOf('class="career-timeline"')));
+    assert.ok(positions.every((position, index) => position >= 0 && (!index || position > positions[index - 1])));
+    for (const value of ['Contact Insurance Brokerage', 'Contact Financial Holding', 'Altibbi', '2023–2025', '2021–2022', 'Python', 'SQL', 'PostgreSQL', 'Power BI', 'DAX', 'Excel', 'IBM Data Analyst Professional Certificate', 'DataCamp Data Analyst Associate', 'DataCamp SQL Associate']) {
+      assert.ok(html.includes(value), value);
+    }
+    assert.match(html, /href="[^"]+\?lang=(en|ar)#contact"/);
+    assert.doesNotMatch(html, /id="contact"/);
+  }
+  assert.match(en, /June 2025–Present/);
+  assert.match(ar, /يونيو 2025–الآن/);
+});
+
+test('emits ten real pages where every local link, fragment and asset resolves', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'mt-portfolio-test-'));
   try {
     const urls = await build(dir, origin);
-    assert.equal(urls.length, 8);
+    assert.equal(urls.length, 10);
     for (const url of urls) {
       const page = await readFile(join(dir, new URL(url).pathname.slice('/alternate-base/'.length), 'index.html'), 'utf8');
       for (const [, href] of page.matchAll(/(?:href|src)="([^"]+)"/g)) {
@@ -46,6 +67,7 @@ test('emits eight real pages where every local link, fragment and asset resolves
         if (target.pathname === new URL(origin).pathname) {
           // Vite emits the story homepage separately from the project pages.
           assert.match(target.search, /^\?lang=(en|ar)$/);
+          assert.match(target.hash, /^(?:#story|#contact)?$/);
           continue;
         }
         const path = resolve(dir, target.pathname.slice('/alternate-base/'.length));

@@ -1,0 +1,187 @@
+:root {
+  --paper: #f6f4ed;
+  --ink: #292d2b;
+  --accent: #247367;
+  --soft-accent: #dce9df;
+  --line: #d4d8ce;
+  --paper-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%233a4135' opacity='.025' filter='url(%23n)' d='M0 0h160v160H0z'/%3E%3C/svg%3E");
+  --story-gutter: clamp(24px, 5.5vw, 88px);
+  --story-top: 32px;
+}
+@media (max-width: 1000px) and (min-width: 701px) { :root { --story-gutter: 35px; } }
+@media (max-width: 700px) { :root { --story-top: 20px; --story-gutter: 24px; } }
+@media (max-width: 700px) and (max-height: 700px) { :root { --story-top: 14px; --story-gutter: 20px; } }
+@media (max-height: 480px) and (min-width: 600px) { :root { --story-top: 12px; --story-gutter: 26px; } }
+.story-header {
+  --muted: #666f68;
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 2;
+  padding: var(--story-top) var(--story-gutter) 0;
+  background: var(--paper) var(--paper-texture);
+  font-family: "Manrope Variable", sans-serif;
+  line-height: normal;
+}
+.masthead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--line);
+  gap: 16px;
+}
+.brand {
+  display: flex;
+  gap: 17px;
+  align-items: center;
+  font-family: "Manrope Variable", sans-serif;
+}
+.monogram {
+  font-size: 37px;
+  font-weight: 800;
+  letter-spacing: -3px;
+  line-height: 1;
+}
+.monogram > span {
+  color: var(--accent);
+}
+.brand > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.brand strong {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.7px;
+}
+.brand > div > span {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+}
+.edition {
+  font-size: 12px;
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  color: var(--muted);
+}
+.edition-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.language-control {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 2px;
+  font: 600 10px "Manrope Variable", sans-serif;
+  flex-shrink: 0;
+}
+.language-control :is(button, a) {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 5px;
+  cursor: pointer;
+  display: inline-grid;
+  place-items: center;
+  text-decoration: none;
+  font: inherit;
+}
+.language-control :is(button, a):is([aria-pressed="true"], [aria-current="true"]) {
+  background: var(--soft-accent);
+  color: var(--accent);
+}
+.language-control > span {
+  color: var(--line);
+  font-weight: 400;
+}
+.masthead > .brand {
+  margin-inline-end: auto;
+}
+.story-links {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 1.5vw, 24px);
+}
+.story-links a {
+  display: inline-grid;
+  place-items: center;
+  min-height: 44px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 700;
+  text-underline-offset: 4px;
+  white-space: nowrap;
+}
+.story-links a:hover,
+.story-links a[aria-current] {
+  color: var(--accent);
+  text-decoration: underline;
+}
+@media (max-width: 700px) {
+  .masthead {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 2px 8px;
+    padding-bottom: 6px;
+  }
+  .monogram {
+    font-size: 30px;
+  }
+  .brand {
+    gap: 11px;
+  }
+  .brand strong {
+    font-size: 9px;
+    letter-spacing: 1.2px;
+  }
+  .brand > div > span {
+    font-size: 7px;
+    letter-spacing: 1px;
+  }
+  .language-control {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: 9px;
+  }
+  .story-links {
+    grid-column: 1 / -1;
+    justify-content: space-between;
+  }
+  .story-links a {
+    min-height: 34px;
+    font-size: 11px;
+  }
+}
+@media (max-width: 1000px) {
+  .masthead > .edition {
+    display: none;
+  }
+}
+@media (max-height: 480px) and (min-width: 600px) {
+  .masthead {
+    display: flex;
+  }
+  .brand .monogram {
+    font-size: 27px;
+  }
+  .language-control :is(button, a) {
+    min-height: 34px;
+  }
+  .story-links a {
+    min-height: 34px;
+    font-size: 10px;
+  }
+}
+.story-header[lang="ar"] { font-family: "Noto Sans Arabic Variable", sans-serif; }
+.brand > div > span { font-family: "Manrope Variable", "Noto Sans Arabic Variable", sans-serif; }

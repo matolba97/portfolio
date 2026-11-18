@@ -1,61 +1,132 @@
 import { expect, test } from '@playwright/test';
 
-test('opens the original story, switches languages, and reaches a project', async ({ page }) => {
-  await page.goto('/');
-  const current = page.locator('[data-scene]');
-  await expect(current).toHaveAttribute('data-scene', 'problem');
+const progress = (page) => page.locator('[data-active-chapter]');
+const expectChapter = (page, chapter) => expect(progress(page)).toHaveAttribute('data-active-chapter', String(chapter));
+
+test('uses desktop wheel, fine scroll deltas, and native keyboard scrolling', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto('/?lang=en');
+  await expect(page.locator('[data-scene]')).toHaveCount(5);
+  await expectChapter(page, 1);
+  await expect(page.getByRole('navigation').getByRole('link', { name: 'Story' })).toHaveAttribute('aria-current', 'location');
+
+  const header = page.locator('.story-header');
+  await expect(header).toHaveCSS('position', 'sticky');
+  await page.mouse.move(630, 370);
+  await page.mouse.wheel(0, 620);
+  await expectChapter(page, 2);
+  expect(Math.abs((await header.boundingBox()).y)).toBeLessThan(2);
+  const illustration = page.locator('#insight .scene-svg');
+  const firstVisit = await illustration.elementHandle();
+
+  await page.mouse.wheel(0, -620);
+  await expectChapter(page, 1);
+  await page.keyboard.press('PageDown');
+  await expectChapter(page, 2);
+  expect(await firstVisit.evaluate(svg => svg.isConnected)).toBe(true);
+
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect(page.locator('html')).toHaveCSS('scroll-snap-type', 'none');
+  for (let step = 0; step < 24 && await progress(page).getAttribute('data-active-chapter') === '2'; step++) {
+    const previousScroll = await page.evaluate(() => scrollY);
+    await page.mouse.wheel(0, 55);
+    await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(previousScroll);
+  }
+  await expectChapter(page, 3);
+  await page.keyboard.press('Home');
+  await expectChapter(page, 1);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.screenshot({ path: testInfo.outputPath('story-desktop.png') });
+});
+
+test('keeps localized links, direct URLs, and back and forward navigation', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/?lang=ar#insight');
+  await expectChapter(page, 2);
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
   await expect(page.getByRole('link', { name: 'المشاريع' })).toHaveAttribute('href', './ar/projects/');
-  await page.getByRole('button', { name: 'التبديل إلى الإنجليزية' }).click();
+  await page.locator('.language-control button').filter({ hasText: 'EN' }).click();
   await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
-  await expect(current).toHaveAttribute('data-scene', 'problem');
-  await page.getByRole('button', { name: 'Next slide' }).press('ArrowRight');
-  await expect(current).toHaveAttribute('data-scene', 'insight');
-  await page.getByRole('link', { name: 'Projects', exact: true }).click();
+  await expectChapter(page, 2);
+
+  const nav = page.getByRole('navigation');
+  await nav.getByRole('link', { name: 'About' }).click();
+  await expect(page).toHaveURL(/\/about\/$/);
+  await expect(page.getByRole('heading', { name: 'Career timeline' })).toBeVisible();
+  await expect(nav.getByRole('link', { name: 'About' })).toHaveAttribute('aria-current', 'page');
+
+  await nav.getByRole('link', { name: 'Contact' }).click();
+  await expect(page).toHaveURL(/#contact$/);
+  await expect(page.locator('#contact')).toHaveAttribute('href', /linkedin\.com\/in\//);
+  await expect(nav.getByRole('link', { name: 'Contact' })).toHaveAttribute('aria-current', 'location');
+  await page.goBack();
+  await expect(page).toHaveURL(/\/about\/$/);
+  await page.goForward();
+  await expect(page).toHaveURL(/#contact$/);
+  await nav.getByRole('link', { name: 'Story' }).click();
+  await expectChapter(page, 1);
+
+  await nav.getByRole('link', { name: 'Projects' }).click();
   await expect(page).toHaveURL(/\/projects\/$/);
-  await page.keyboard.press('Tab');
-  await expect(page.getByRole('link', { name: 'Skip to content' })).toBeFocused();
-  await page.keyboard.press('Enter');
-  await expect(page.locator('main')).toBeFocused();
+  await expect(page.locator('html')).toHaveCSS('scroll-snap-type', 'none');
+  await nav.getByRole('link', { name: 'Contact' }).click();
+  await expect(page).toHaveURL(/\/projects\/#contact$/);
   await page.getByRole('link', { name: 'Read case study' }).first().click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Workforce Intelligence');
-  await page.getByRole('link', { name: 'العربية' }).click();
+  await expect(page.locator('html')).toHaveCSS('scroll-snap-type', 'none');
+  await page.getByRole('link', { name: 'Switch to Arabic' }).click();
   await expect(page).toHaveURL(/\/ar\/work\/workforce-intelligence\/$/);
   await page.reload();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('تحليل القوى العاملة');
   await expect(page.getByRole('link', { name: 'افتح Power BI' })).toHaveAttribute('href', /app\.powerbi\.com/);
-  await page.getByRole('link', { name: 'كل المشاريع' }).click();
-  await expect(page).toHaveURL(/\/ar\/projects\/$/);
-});
-
-test('keeps former public contact, about, and work links usable', async ({ page }) => {
-  await page.goto('/?lang=en#contact');
-  await expect(page.locator('[data-scene]')).toHaveAttribute('data-scene', 'hello');
-  await expect(page.getByRole('link', { name: /Connect with me on LinkedIn/ })).toHaveAttribute('href', /linkedin\.com\/in\//);
-  await page.goto('/?lang=ar#about');
-  await expect(page.locator('[data-scene]')).toHaveAttribute('data-scene', 'responsibilities');
   await page.goto('/?lang=en#work');
   await expect(page).toHaveURL(/\/projects\/$/);
+  await page.goto('/?lang=ar#about');
+  await expect(page).toHaveURL(/\/ar\/about\/$/);
 });
 
-test.describe('small screen', () => {
-  test.use({ viewport: { width: 320, height: 568 }, hasTouch: true, isMobile: true });
+test.describe('touch and short viewports', () => {
+  test.use({ viewport: { width: 393, height: 851 }, hasTouch: true, isMobile: true });
 
-  test('supports reduced motion and opens Arabic projects with one tap', async ({ page }) => {
+  test('scrolls vertically by touch with reduced motion and keeps content reachable', async ({ page, context }, testInfo) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.goto('/');
+    await page.goto('/?lang=ar');
     await expect(page.locator('.presentation')).toHaveAttribute('data-reduced-motion', 'true');
-    for (const [width, height] of [[320, 568], [393, 851], [740, 360], [768, 1024], [1440, 900]]) {
+    await expect(page.locator('html')).toHaveCSS('scroll-snap-type', 'none');
+    await expect(page.locator('html')).toHaveCSS('scroll-behavior', 'auto');
+
+    const client = await context.newCDPSession(page);
+    async function swipe(start, end) {
+      await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 190, y: start }] });
+      for (let step = 1; step <= 12; step++) {
+        await client.send('Input.dispatchTouchEvent', {
+          type: 'touchMove',
+          touchPoints: [{ x: 190, y: start + (end - start) * step / 12 }],
+        });
+      }
+      await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    }
+    await swipe(780, 135);
+    await expectChapter(page, 2);
+    await swipe(135, 780);
+    await expectChapter(page, 1);
+    await client.detach();
+
+    for (const [width, height] of [[320, 568], [740, 360], [768, 1024]]) {
       await page.setViewportSize({ width, height });
       expect(await page.locator('html').evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
     }
-    await page.setViewportSize({ width: 320, height: 568 });
+    await page.setViewportSize({ width: 320, height: 420 });
+    await page.goto('/#responsibilities');
+    await expectChapter(page, 4);
+    await expect(page.locator('.responsibility-list li')).toHaveCount(4);
+    await page.locator('.responsibility-list li').last().evaluate(item => item.scrollIntoView({ block: 'center' }));
+    const lastItem = await page.locator('.responsibility-list li').last().boundingBox();
+    const progressBar = await page.locator('.story-progress').boundingBox();
+    expect(lastItem.y + lastItem.height).toBeLessThanOrEqual(progressBar.y + 1);
+    await page.screenshot({ path: testInfo.outputPath('story-short-arabic.png') });
     await page.getByRole('link', { name: 'المشاريع' }).tap();
-    await expect(page.locator('html')).toHaveAttribute('lang', 'ar');
     await expect(page).toHaveURL(/\/ar\/projects\/$/);
-    expect(await page.locator('html').evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
-    await page.getByRole('link', { name: 'اقرأ دراسة الحالة' }).last().tap();
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Maven Fuzzy Factory');
+    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
   });
 });
-

@@ -100,6 +100,7 @@ export const projects = [
 export const copy = {
   en: {
     role: 'Data Analyst', location: 'Cairo, Egypt', home: 'Home', work: 'Work', about: 'About', contact: 'Contact', skip: 'Skip to content', language: 'Language',
+    navigation: 'Portfolio navigation', storyLink: 'Story', projectsLink: 'Projects',
     headline: ['Good decisions', 'start with a question.'], intro: 'I’m Mohamed Tolba, a data analyst in insurance brokerage. I build reports that help teams make sense of messy records and decide where to look next.',
     browse: 'Explore my work', process: 'How I work', processTitle: 'From source to decision.',
     steps: [['Start with the question', 'Define what the business needs to understand and which records can answer it.'], ['Make the numbers agree', 'Clean the source, check the grain, and reconcile totals before building measures.'], ['Show what matters', 'Explain what changed, which segments drove it, and what’s worth investigating next.']],
@@ -113,6 +114,7 @@ export const copy = {
   },
   ar: {
     role: 'محلل بيانات', location: 'القاهرة، مصر', home: 'الرئيسية', work: 'المشاريع', about: 'نبذة عني', contact: 'تواصل', skip: 'انتقل إلى المحتوى', language: 'اللغة',
+    navigation: 'التنقل في الموقع', storyLink: 'القصة', projectsLink: 'المشاريع',
     headline: ['القرار الواضح', 'بيبدأ بسؤال.'], intro: 'أنا محمد طلبة، محلل بيانات في مجال وساطة التأمين. ببني تقارير تساعد الفرق تفهم السجلات المتفرقة وتحدد الخطوة الجاية في التحليل.',
     browse: 'تصفّح المشاريع', process: 'طريقة عملي', processTitle: 'من السجل إلى القرار.',
     steps: [['أبدأ بالسؤال', 'أحدد ما يحتاج الفريق إلى فهمه والسجلات القادرة على الإجابة.'], ['أراجع اتساق الأرقام', 'أنظّف المصدر، وأحدد مستوى تفاصيل البيانات، وأطابق الإجماليات قبل بناء المقاييس.'], ['أعرض ما يهم', 'أوضح ما تغير، وأي مجموعات ساهمت في التغير، وما يستحق دراسة إضافية.']],
