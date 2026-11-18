@@ -24,7 +24,8 @@ jobs:
         env:
           PORTFOLIO_ORIGIN: ${{ steps.pages.outputs.base_url }}/
       - run: npm install --no-save --package-lock=false @playwright/test@1.56.1
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install --only-shell chromium
+        timeout-minutes: 3
       - run: npm run test:browser
       - uses: actions/upload-pages-artifact@v4
         with:
